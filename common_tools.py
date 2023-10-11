@@ -41,8 +41,42 @@ API_KEYS_FILE_2="../api_keys_20230612.json"
 # Queries LLM evaluation definitions
 #
 
+EVALUATION_SYSTEM_ROLE_REV_2_9 = {
+    'role': "system", 
+    'content': "Você avalia se uma passagem de texto responde a uma pergunta, indicando uma pontuação de 0 à 2, onde 0 indica que a passagem não responde a pergunta; 1 indica que a passagem responde parcialmente a pergunta; e 2 que a passagem responde a pergunta de forma clara e completa. Sua resposta deve ser JSON, com o primeiro campo \"Razão\", explicando seu raciocínio, e segundo campo \"Pontuação\""
+}
 
-EVALUATION_SYSTEM_ROLE = {
+
+
+EVALUATION_SYSTEM_ROLE_REV_2_8 = {
+    'role': "system", 
+    'content': "Você avalia se uma passagem de texto é relevante para responder a uma pergunta, indicando uma pontuação de 0 à 2, onde 0 indica que a passagem não é relevante e não deveria ser relacionada à pergunta; 1 indica que a passagem é relevante, respondendo parcialmente a pergunta, mas contendo outro conteúdo não relevante; e 2 indica que a passagem é altamente relevante, respondendo claramente à pergunta. Sua resposta deve ser JSON, com o primeiro campo \"Razão\", explicando seu raciocínio, e segundo campo \"Pontuação\""
+}
+
+
+
+EVALUATION_SYSTEM_ROLE_REV_2_7 = {
+    'role': "system", 
+    'content': "Você avalia se uma passagem de texto responde a uma pergunta, indicando uma pontuação de 0 à 2, onde 0 indica que a passagem não está relacionada e não responde a pergunta; 1 indica que a passagem responde parcialmente a pergunta ou responde mas inclui muita informação não relacionada; e 2 que a passagem responde a pergunta de forma clara e direta, sem conter informações não relacionadas. Sua resposta deve ser JSON, com o primeiro campo \"Razão\", explicando seu raciocínio, e segundo campo \"Pontuação\""
+}
+
+
+
+EVALUATION_SYSTEM_ROLE_REV_2_6 = {
+    'role': "system", 
+    'content': "Task description:\nEvaluate how adequate a text passage is to answer a question, indicating a score from 0 to 3 for the passage adequacy.\n\nEvaluation criteria:\npassage adequacy: how clearly the passage answers to the question; adequate passage includes only relevant information which clarifies or enriches the answer; adequate passage does not include unnecessary or unrelated information, or any clutter (e.g. strange characters, extensive list of items)  that might hinder the answer comprehension.\n\nEvaluation Steps:\n1. Read the question carefully: Understand what the question is asking. Identify the key points or information that the answer should contain.\n\n2. Read the text passage: Read the passage thoroughly to understand its content. Pay attention to the details and the information provided in the passage.\n\n3. Compare the question and the passage: Compare the information in the passage with the key points identified in the question. Check if the passage contains the necessary information to answer the question.\n\n4. Evaluate the relevance of the information: Determine if the information in the passage is relevant to the question. The passage should not contain unnecessary or unrelated information that does not contribute to answering the question.\n\n5. Check for clarity: The passage should be clear and easy to understand. It should not contain any clutter such as strange characters or an extensive list of items that might hinder the comprehension of the answer.\n\n6. Score the passage: Based on the evaluation, score the passage on a scale of 0 to 3. A score of 0 indicates that the passage does not answer the question at all. A score of 1 indicates that the passage provides some information but it is not adequate to answer the question. A score of 2 indicates that the passage adequately answers the question but may contain some unnecessary information. A score of 3 indicates that the passage perfectly answers the question, providing only relevant information and no clutter.\n\nExpected JSON output:\n{\"Razão\": \"<>\", \"Pontuação\":  <>}"
+}
+
+
+
+EVALUATION_SYSTEM_ROLE_REV_2_5 = {
+    'role': "system", 
+    'content': "Task description:\nEvaluate whether a passage of text answers a question, indicating a score from 0 to 3 for the passage adequacy.\nEvaluation criteria:\npassage adequacy: how clearly the passage answers to the question, including only relevant information which clarifies or enriches the answer, avoiding unnecessary, unrelated information, or anything that might hinder the answer comprehension.\n\nEvaluation Steps:\n1. Read the question carefully: Understand what the question is asking. Identify the key points or information that the question is seeking.\n\n2. Read the passage: Read the passage thoroughly. Try to understand the main idea, the details, and the overall context of the passage.\n\n3. Compare the question and the passage: Compare the information in the passage with the question. Look for any information in the passage that directly answers the question.\n\n4. Evaluate the relevance of the information: Determine if the information in the passage that answers the question is relevant and directly related to the question. If the passage contains unnecessary or unrelated information, it may not be a good answer to the question.\n\n5. Evaluate the clarity of the information: Determine if the information in the passage is clear and easy to understand. If the passage is confusing or difficult to understand, it may not be a good answer to the question.\n\n6. Evaluate the completeness of the information: Determine if the passage fully answers the question. If the passage only partially answers the question, it may not be a good answer.\n\n7. Score the passage: Based on your evaluation, give the passage a score from 0 to 3. A score of 0 means the passage does not answer the question at all.\n\nExpected JSON output:\n{\"Razão\": \"<>\", \"Pontuação\":  <>}"
+}
+
+
+
+EVALUATION_SYSTEM_ROLE_REV_2_4 = {
     'role': "system", 
     'content': "Task description:\nEvaluate whether a passage of text answers a question, indicating a score from 0 to 3, where 0 = passage is inappropriate for the question; 1 = passage partially answers the question; 2 = passage answers the question but does not contain all the necessary information; and 3 = passage contains all the information to answer the question.\n\nEvaluation Steps:\n1. Read the question carefully: Understand what the question is asking. Identify the key points or information that the answer should contain.\n\n2. Read the passage: Read the passage thoroughly. Try to understand the main idea and the details provided in the passage.\n\n3. Compare the question and the passage: Compare the information in the passage with the requirements of the question. Identify if the passage contains the necessary information to answer the question.\n\n4. Score the passage: Based on your comparison, score the passage. If the passage is inappropriate for the question, score it 0. If the passage partially answers the question, score it 1. If the passage answers the question but does not contain all the necessary information, score it 2. If the passage contains all the information to answer the question, score it 3.\n\nExpected JSON output:\n{\"Razão\": \"<>\", \"Pontuação\":  <>}"
 }
@@ -62,6 +96,7 @@ EVALUATION_SYSTEM_ROLE_REV_2_2 = {
 }
 
 
+
 EVALUATION_SYSTEM_ROLE_REV_2_1 = {
     'role': "system", 
     'content': "Você avalia se uma passagem de texto responde a uma pergunta, indicando uma pontuação de 0 à 3, onde 0 indica que a passagem não está relacionada com a pergunta; 1 indica que a passagem está no tema mas não responde a pergunta; 2 indica que a passagem responde parcialmente a pergunta ou responde mas inclui muita informação não relacionada; e 3 que a passagem responde a pergunta de forma clara e direta, sem conter informações não relacionadas. Sua resposta deve ser JSON, com o primeiro campo \"Razão\", explicando seu raciocínio, e segundo campo \"Pontuação\""
@@ -69,7 +104,118 @@ EVALUATION_SYSTEM_ROLE_REV_2_1 = {
 
 
 
-EVALUATION_FEW_SHOT_EXAMPLES=[
+EVALUATION_FEW_SHOT_EXAMPLES_REV_2_9=[
+    [
+        {
+            'role': "user",
+            'content': "Passagem: \"Vanessa Redgrave nasceu em 30 de janeiro de 1937 em Londres. Ela fará falta, mas não será esquecida. Centenas de fãs imediatamente começaram a escrever suas mensagens de condolências na página do Facebook, expressando sua tristeza pela morte da talentosa atriz de 79 anos.\"\nPergunta: \"quantos anos tem vanessa redgrave?\"",
+        },
+        {
+            'role': "assistant",
+            'content': "{\"Razão\":\"A passagem responde a idade que Vanessa Redgrave tinha quando faleceu, e que ela nasceu em 1937. Com essas informações é possível determinar que ela morreu em 2016 e ter toda informação completa\",\"Pontuação\":2}"
+        }
+    ],
+
+    [
+        {
+            'role': "user",
+            'content': "Passagem: \"O Brasil possui muitas belezas naturais. Neste artigo vamos indicar os melhores lugares para passear no Brasil.\"\nPergunta: \"Onde passear no Brasil?\"",
+        },
+        {
+            'role': "assistant",
+            'content': "{\"Razão\":\"A passagem apenas indica que o Brasil tem muitas belezas naturais, mas não lista nenhum exemplo. Embora a passagem indique que artigo vai falar sobre lugares para passear no Brasil, o trecho apresentado não lista nenhum lugar específico para passear no Brasil\",\"Pontuação\":0}"
+        }
+    ],
+
+    [
+        {
+            'role': "user",
+            'content': "Passagem: \"conveniente no bairro mais moderno da cidade, o Radisson Blu Belo Horizonte, Savassi é um dos hotéis cinco estrelas mais desejados do Sudeste do Brasil. Passe o dia comprando produtos de marcas famosas no Pátio Savassi ou visitando a Pampulha, um Patrimônio Mundial da UNESCO maravilhosamente preservado, antes de voltar para um dos nossos quartos de hotel modernos. Quando estiver pronto para se aventurar novamente, caminhe pelo movimentado Mercado Central de Belo Horizonte para comprar souvenires ou frutas frescas e provar lanches tradicionais brasileiros, como o pão de queijo. Comece seu dia com o pé direito saboreando um café da manhã de cortesia na Pizzaria Olegário e volte mais tarde para um delicioso almoço ou jantar. Viajando a trabalho? Com um centro de negócios, estacionamento amplo e quatro espaços de\"\nPergunta: \"Onde passear no Brasil?\"",
+        },
+        {
+            'role': "assistant",
+            'content': "{\"Razão\":\"A passagem responde à pergunta indiretamente incluindo informação desnecessária, indicando que na região do hotel em Belo Horizonte fica um Patrimônio Mundial da UNESCO, que pode ser uma boa sugestão de passeio no Brasil\",\"Pontuação\":1}"
+        }
+    ], 
+]
+
+
+
+EVALUATION_FEW_SHOT_EXAMPLES_REV_2_8=[
+    [
+        {
+            'role': "user",
+            'content': "Passagem: \"Vanessa Redgrave nasceu em 30 de janeiro de 1937 em Londres. Ela fará falta, mas não será esquecida. Centenas de fãs imediatamente começaram a escrever suas mensagens de condolências na página do Facebook, expressando sua tristeza pela morte da talentosa atriz de 79 anos.\"\nPergunta: \"quantos anos tem vanessa redgrave?\"",
+        },
+        {
+            'role': "assistant",
+            'content': "{\"Razão\":\"A passagem é altamente relevante pois responde a idade que Vanessa Redgrave tinha quando faleceu, e que ela nasceu em 1937. Com essas informações é possível determinar que ela morreu em 2016 e ter toda informação completa\",\"Pontuação\":2}"
+        }
+    ],
+
+    [
+        {
+            'role': "user",
+            'content': "Passagem: \"O Brasil possui muitas belezas naturais. Neste artigo vamos indicar os melhores lugares para passear no Brasil.\"\nPergunta: \"Onde passear no Brasil?\"",
+        },
+        {
+            'role': "assistant",
+            'content': "{\"Razão\":\"A passagem é irrelevante para a pergunta, pois apenas indica que o Brasil tem muitas belezas naturais, mas não lista nenhum exemplo específico.\",\"Pontuação\":0}"
+        }
+    ],
+
+    [
+        {
+            'role': "user",
+            'content': "Passagem: \"conveniente no bairro mais moderno da cidade, o Radisson Blu Belo Horizonte, Savassi é um dos hotéis cinco estrelas mais desejados do Sudeste do Brasil. Passe o dia comprando produtos de marcas famosas no Pátio Savassi ou visitando a Pampulha, um Patrimônio Mundial da UNESCO maravilhosamente preservado, antes de voltar para um dos nossos quartos de hotel modernos. Quando estiver pronto para se aventurar novamente, caminhe pelo movimentado Mercado Central de Belo Horizonte para comprar souvenires ou frutas frescas e provar lanches tradicionais brasileiros, como o pão de queijo. Comece seu dia com o pé direito saboreando um café da manhã de cortesia na Pizzaria Olegário e volte mais tarde para um delicioso almoço ou jantar. Viajando a trabalho? Com um centro de negócios, estacionamento amplo e quatro espaços de\"\nPergunta: \"Onde passear no Brasil?\"",
+        },
+        {
+            'role': "assistant",
+            'content': "{\"Razão\":\"A passagem é relevante pois responde indiretamente à pergunta, incluindo muita informação desnecessária, mas indicando que na região do hotel em Belo Horizonte fica um Patrimônio Mundial da UNESCO, que pode ser uma boa sugestão de passeio no Brasil\",\"Pontuação\":1}"
+        }
+    ], 
+]
+
+
+
+EVALUATION_FEW_SHOT_EXAMPLES_REV_2_7=[
+    [
+        {
+            'role': "user",
+            'content': "Passagem: \"Vanessa Redgrave nasceu em 30 de janeiro de 1937 em Londres. Ela fará falta, mas não será esquecida. Centenas de fãs imediatamente começaram a escrever suas mensagens de condolências na página do Facebook, expressando sua tristeza pela morte da talentosa atriz de 79 anos.\"\nPergunta: \"quantos anos tem vanessa redgrave?\"",
+        },
+        {
+            'role': "assistant",
+            'content': "{\"Razão\":\"A passagem responde a idade que Vanessa Redgrave tinha quando faleceu, e que ela nasceu em 1937. Com essas informações é possível determinar que ela morreu em 2016 e ter toda informação completa\",\"Pontuação\":2}"
+        }
+    ],
+
+    [
+        {
+            'role': "user",
+            'content': "Passagem: \"O Brasil possui muitas belezas naturais. Neste artigo vamos indicar os melhores lugares para passear no Brasil.\"\nPergunta: \"Onde passear no Brasil?\"",
+        },
+        {
+            'role': "assistant",
+            'content': "{\"Razão\":\"A passagem apenas indica que o Brasil tem muitas belezas naturais, mas não lista nenhum exemplo. Embora a passagem indique que artigo vai falar sobre lugares para passear no Brasil, o trecho apresentado não lista nenhum lugar específico para passear no Brasil\",\"Pontuação\":0}"
+        }
+    ],
+
+    [
+        {
+            'role': "user",
+            'content': "Passagem: \"conveniente no bairro mais moderno da cidade, o Radisson Blu Belo Horizonte, Savassi é um dos hotéis cinco estrelas mais desejados do Sudeste do Brasil. Passe o dia comprando produtos de marcas famosas no Pátio Savassi ou visitando a Pampulha, um Patrimônio Mundial da UNESCO maravilhosamente preservado, antes de voltar para um dos nossos quartos de hotel modernos. Quando estiver pronto para se aventurar novamente, caminhe pelo movimentado Mercado Central de Belo Horizonte para comprar souvenires ou frutas frescas e provar lanches tradicionais brasileiros, como o pão de queijo. Comece seu dia com o pé direito saboreando um café da manhã de cortesia na Pizzaria Olegário e volte mais tarde para um delicioso almoço ou jantar. Viajando a trabalho? Com um centro de negócios, estacionamento amplo e quatro espaços de\"\nPergunta: \"Onde passear no Brasil?\"",
+        },
+        {
+            'role': "assistant",
+            'content': "{\"Razão\":\"A passagem responde à pergunta indiretamente incluindo informação desnecessária, indicando que na região do hotel em Belo Horizonte fica um Patrimônio Mundial da UNESCO, que pode ser uma boa sugestão de passeio no Brasil\",\"Pontuação\":1}"
+        }
+    ], 
+]
+
+
+
+EVALUATION_FEW_SHOT_EXAMPLES_REV_2_2=[
     [
         {
             'role': "user",
@@ -162,6 +308,15 @@ EVALUATION_FEW_SHOT_EXAMPLES_REV_2_1=[
         }
     ], 
 ]
+
+
+#
+# Define which version to use
+#
+
+EVALUATION_FEW_SHOT_EXAMPLES=None
+EVALUATION_SYSTEM_ROLE=EVALUATION_SYSTEM_ROLE_REV_2_6
+
 
 
 
@@ -311,6 +466,7 @@ def execute_LLM_passage_relevance_evaluation(which_query,
                                              which_passage, 
                                              model=MODEL_GPT3, 
                                              number_of_completions=1,
+                                             add_examples=True,
                                              verbose=True):
 
     start_time = time.time()
@@ -355,13 +511,14 @@ def execute_LLM_passage_relevance_evaluation(which_query,
     elif model == MODEL_GPT4:
         messages_to_send = [EVALUATION_SYSTEM_ROLE]
 
-        for i, example in enumerate([EVALUATION_FEW_SHOT_EXAMPLES[0], EVALUATION_FEW_SHOT_EXAMPLES[2]]):
-            for example_role in example:
-                if example_role['role'] == "user":
-                    messages_to_send.append({'role': "user", 
-                                             'content': EVALUATION_FEW_SHOT_EXAMPLE_FORMAT.format(i + 1, example_role['content'])})
-                else:
-                    messages_to_send.append(example_role)
+        if add_examples:
+            for i, example in enumerate([EVALUATION_FEW_SHOT_EXAMPLES[0], EVALUATION_FEW_SHOT_EXAMPLES[2]]):
+                for example_role in example:
+                    if example_role['role'] == "user":
+                        messages_to_send.append({'role': "user", 
+                                                'content': EVALUATION_FEW_SHOT_EXAMPLE_FORMAT.format(i + 1, example_role['content'])})
+                    else:
+                        messages_to_send.append(example_role)
 
         messages_to_send.append({'role': "user", 'content': query_passage_to_evaluate})
 
@@ -546,7 +703,8 @@ def LLM_query_passage_evaluation(query_passages_df,
                                  which_model, 
                                  output_file, 
                                  LLM_evaluations=None,
-                                 number_of_completions=1):
+                                 number_of_completions=1,
+                                 add_examples=True):
 
     if LLM_evaluations is None:
         LLM_evaluations = {}
@@ -563,6 +721,7 @@ def LLM_query_passage_evaluation(query_passages_df,
                                                                              row['passage'], 
                                                                              model=which_model, 
                                                                              number_of_completions=number_of_completions,
+                                                                             add_examples=add_examples,
                                                                              verbose=True)
             except Exception as e:
                 print(e)
@@ -576,6 +735,7 @@ def LLM_query_passage_evaluation(query_passages_df,
                                                                              row['passage'], 
                                                                              model=which_model, 
                                                                              number_of_completions=number_of_completions,
+                                                                             add_examples=add_examples,
                                                                              verbose=True)
         else:
             print("-- LLM already evaluated document {}...\n".format(document_key))

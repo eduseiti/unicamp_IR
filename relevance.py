@@ -206,12 +206,10 @@ class LLMAccess():
 
 class GPT4Access(LLMAccess):
 
-    MODEL_NAME="gpt-4"
     EVALUATION_MAX_TOKENS_RESPONSE=500
 
-
-
-    def __init__(self, 
+    def __init__(self,
+                 model_name, 
                  initial_prompt, 
                  query_passage_format, 
                  output_regex, 
@@ -231,11 +229,11 @@ class GPT4Access(LLMAccess):
                          evaluations_cache=evaluations_cache,
                          verbose=verbose)
 
+        self.model_name = model_name
 
     
     def initialize_LLM(self, api_key):
         self.LLM_interface.api_key = api_key
-
 
 
     def compute_cost(self, token_usage):
@@ -245,7 +243,6 @@ class GPT4Access(LLMAccess):
         
         return cost
     
-
 
     def passage_relevance_evaluation(self, 
                                      query, 
@@ -290,12 +287,22 @@ class GPT4Access(LLMAccess):
             print("\n")
             print(messages_to_send)
         
-        response = openai.ChatCompletion.create(model=GPT4Access.MODEL_NAME,
+
+        if verbose:
+            print("GPT-4 model name={}".format(self.model_name))
+
+
+        response = openai.ChatCompletion.create(model=self.model_name,
                                                 messages=messages_to_send,
                                                 temperature=temperature,
                                                 n=number_of_completions,
-                                                max_tokens=GPT4Access.EVALUATION_MAX_TOKENS_RESPONSE)
+                                                max_tokens=GPT4Access.EVALUATION_MAX_TOKENS_RESPONSE,
+                                                top_p=1,
+                                                frequency_penalty=0,
+                                                presence_penalty=0)
 
+
+        print(response)
 
 
         if verbose:
@@ -348,7 +355,7 @@ if __name__ == '__main__':
 
     parser = ap.ArgumentParser()
 
-    parser.add_argument('--model', default='gpt4')
+    parser.add_argument('--model', default='gpt-4', help="LLM model to be used. For OPEN AI models, shall match the API model name.")
     parser.add_argument('--api_keys', default=None, help="JSON file with LLM API keys storage.")
     parser.add_argument('--api_key_to_use', default=None, help="String identifying the API key to use from the API keys storage.")
     parser.add_argument('--initial_prompt', default=None, help="JSON file with the main prompt.")
@@ -360,7 +367,7 @@ if __name__ == '__main__':
     parser.add_argument('--completions', default=1, type=int, help="Number of completions to request from LLM.")
     parser.add_argument('--output', default=None, help="Passage evaluations output file")
     parser.add_argument('--verbose', default=True)
-    parser.add_argument('--history', default='None', help="History file to reload execution parameters and evaluation cache")
+    parser.add_argument('--history', default=None, help="History file to reload execution parameters and evaluation cache")
     parser.add_argument('--config', default=None, help="Optional JSON file to hold execution configuration parameters.")
 
     args = parser.parse_args()
@@ -398,11 +405,18 @@ if __name__ == '__main__':
                 m = re.match("\s*[\"\'](.+)[\"\']\s*:\s*[\"\'](.+)[\"\']\s*,?\s*[\n\r]", line)
 
                 if (m is not None) and (len(m.groups()) == 2):
-                    config_from_file[m.group(1)] = m.group(2)
+                    if m.group(1) != 'result_regex':
+                        config_from_file[m.group(1)] = bytes(m.group(2), "utf-8").decode("unicode_escape")
+                    else:
+                        # The REGEX goes as raw string
+
+                        config_from_file[m.group(1)] =m.group(2)
+
+                    # print("{}={}".format(m.group(1), m.group(2)))
+
                 # else:
                 #     print("no match")
 
-        # print(config_from_file)
 
         for config_parameter in ['initial_prompt', 'query_passage_format', 'examples', 'example_format', 'result_regex', 'completions', 'output', 'verbose', 'api_key_to_use']:
             if (getattr(args, config_parameter) is None) and (config_parameter in config_from_file):
@@ -423,12 +437,13 @@ if __name__ == '__main__':
             raise ValueError("\"{}\" needs to be defined...".format(config_parameter))
 
 
-    if args.model == 'gpt4':
+    if args.model[:5] == 'gpt-4':
 
         if args.api_keys is None:
             raise ValueError("Needs valid API key to access GPT4...".format(config_parameter))
 
-        LLMInterface = GPT4Access(initial_prompt=args.initial_prompt,
+        LLMInterface = GPT4Access(model_name=args.model,
+                                  initial_prompt=args.initial_prompt,
                                   query_passage_format=args.query_passage_format,
                                   output_regex=args.result_regex, 
                                   examples=args.examples,

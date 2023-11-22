@@ -110,6 +110,7 @@ class LLMAccess():
                                  output_file=None, 
                                  number_of_completions=1,
                                  use_evaluation_cache=True,
+                                 output_history_file=None,
                                  verbose=None):
 
         if verbose is None:
@@ -200,6 +201,12 @@ class LLMAccess():
             if (output_file is not None) or (output_file != ""):
                 validation_results_df.to_csv(output_file, sep='\t', index=False)
         
+
+            if output_history_file is not None:
+                with open(args.history, "wb") as output_history_file_handler:
+                    pickle.dump({'args': args, 
+                                 'evaluation_cache': LLM_evaluations_cache}, output_history_file_handler, pickle.HIGHEST_PROTOCOL)
+
         return validation_results_df
 
 
@@ -461,6 +468,7 @@ if __name__ == '__main__':
         validation_result_df = LLMInterface.query_passage_evaluation(query_passages_df=query_passages_df,
                                                                      output_file=args.output,
                                                                      number_of_completions=args.completions,
+                                                                     output_history_file=args.history,
                                                                      verbose=args.verbose)
         
 
@@ -469,14 +477,6 @@ if __name__ == '__main__':
             print("Final LLM usage cost: {}\nCost saved through already analyzed query/passage tuples: {}".format(validation_result_df['cost'].sum(),
                                                                                                                   validation_result_df['saved_cost'].sum()))
 
-
-
-        # Save the history, if provided
-
-        if (args.history is not None):
-            with open(args.history, "wb") as output_file:
-                pickle.dump({'args': args, 
-                             'evaluation_cache': LLMInterface.get_evaluation_cache()}, output_file, pickle.HIGHEST_PROTOCOL)
 
 
         # If there is no output file, just send the result through the stout

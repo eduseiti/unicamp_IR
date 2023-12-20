@@ -14,6 +14,7 @@ import openai
 class LLMAccess():
 
     LLM_EVALUATION_KEY_FORMAT = "{}_{}"
+    LLM_EVALUATION_REVERSE_MAPPING_KEY_FORMAT = "{}__{}"
 
     def __init__(self, 
                  LLM_interface, 
@@ -25,6 +26,7 @@ class LLMAccess():
                  examples,
                  example_format,
                  evaluations_cache=None,
+                 reverse_mapping=None,
                  verbose=False):
         
         self.LLM_interface = LLM_interface
@@ -43,6 +45,12 @@ class LLMAccess():
             self.LLM_relevance_evaluations_cache=evaluations_cache
         else:
             self.LLM_relevance_evaluations_cache={}
+
+        if reverse_mapping is not None:
+            self.LLM_relevance_evaluations_reverse_mapping=reverse_mapping
+        else:
+            self.LLM_relevance_evaluations_reverse_mapping={}
+
 
 
 
@@ -116,16 +124,20 @@ class LLMAccess():
         if verbose is None:
             verbose = self.verbose
 
-        LLM_evaluations = {}    # This dictionary holds all the passages evaluated in this round
+        LLM_evaluations = {}        # This dictionary holds all the passages evaluated in this round
+        LLM_reverse_mapping = {}    # This dictionary holds a reverse mapping, from the passage text to the passage IDs, to
+                                    # avoid sending twice the same passage text (although with different IDs) for the same
+                                    # query.
 
         if use_evaluation_cache:
             LLM_evaluations_cache = self.LLM_relevance_evaluations_cache
+            LLM_evaluations_reverse_mapping = self.LLM_relevance_evaluations_reverse_mapping
         else:
             # If not using the evaluation cache, just make sure the same document is not 
             # evaluated twice
 
             LLM_evaluations_cache = LLM_evaluations
-
+            LLM_evaluations_reverse_mapping = LLM_reverse_mapping
         
         for i, row in query_passages_df.iterrows():
             
@@ -135,43 +147,74 @@ class LLMAccess():
                 print("Query/Passage evaluation {}; document_key={}...".format(i, document_key))
 
             if document_key not in LLM_evaluations_cache:
-                try:
-                    relevance_results = self.passage_relevance_evaluation(query=row['query'], 
-                                                                          passage=row['passage'], 
-                                                                          number_of_completions=number_of_completions,
-                                                                          verbose=verbose)
-                except Exception as e:
-                    print(e)
 
-                    if number_of_completions > 1:
-                        time.sleep(60)
-                    else:
-                        time.sleep(30)
+                reverse_mapping_key = LLMAccess.LLM_EVALUATION_REVERSE_MAPPING_KEY_FORMAT.format(row['query'], row['passage'])
 
-                    relevance_results = self.passage_relevance_evaluation(query=row['query'], 
-                                                                          passage=row['passage'], 
-                                                                          number_of_completions=number_of_completions,
-                                                                          verbose=verbose)
+                if reverse_mapping_key not in LLM_evaluations_reverse_mapping:
 
-                if (number_of_completions > 1) and ('score' not in relevance_results):
+                    try:
+                        relevance_results = self.passage_relevance_evaluation(query=row['query'], 
+                                                                            passage=row['passage'], 
+                                                                            number_of_completions=number_of_completions,
+                                                                            verbose=verbose)
+                    except Exception as e:
+                        print(e)
+
+                        if number_of_completions > 1:
+                            time.sleep(60)
+                        else:
+                            time.sleep(30)
+
+                        relevance_results = self.passage_relevance_evaluation(query=row['query'], 
+                                                                            passage=row['passage'], 
+                                                                            number_of_completions=number_of_completions,
+                                                                            verbose=verbose)
+
+                    if (number_of_completions > 1) and ('score' not in relevance_results):
+                        
+                        rounded_score = 0
+                        
+                        for LLM_response in relevance_results['LLM_responses']:
+                            rounded_score += LLM_response['score']
+
+                        relevance_results['score'] = int(round(rounded_score / number_of_completions))
+                        
+
+                        if verbose:
+                            print(">> Rounded score: {}\n\n\n".format(relevance_results['score']))
                     
-                    rounded_score = 0
-                    
-                    for LLM_response in relevance_results['LLM_responses']:
-                        rounded_score += LLM_response['score']
+                    relevance_results['saved_cost'] = 0.0
 
-                    relevance_results['score'] = int(round(rounded_score / number_of_completions))
-                    
+                    if use_evaluation_cache:
+                        # Save the new passage evaluation in the cache, if using it
+
+                        LLM_evaluations_cache[document_key] = relevance_results
+
+
+                    LLM_evaluations_reverse_mapping[reverse_mapping_key] = [document_key]
+
+                else:
+                    # The passage text has already been evaluated, but under a different passage_id
 
                     if verbose:
-                        print(">> Rounded score: {}\n\n\n".format(relevance_results['score']))
-                
-                relevance_results['saved_cost'] = 0.0
+                        print("-- LLM already evaluated passage text: {}...".format(reverse_mapping_key))
+                        print("--- Other passages: {}\n".format(LLM_evaluations_reverse_mapping[reverse_mapping_key]))
 
-                if use_evaluation_cache:
-                    # Save the new passage evaluation in the cache, if using it
+                    if use_evaluation_cache:
+                        relevance_results = LLM_evaluations_cache[LLM_evaluations_reverse_mapping[reverse_mapping_key][0]].copy()
 
-                    LLM_evaluations_cache[document_key] = relevance_results
+                        relevance_results['saved_cost'] = relevance_results['cost']
+                        relevance_results['cost'] = 0.0
+
+                        # Save the same passage text evalatuion, but under the new document ID
+
+                        LLM_evaluations_cache[document_key] = relevance_results
+                    else:
+                        relevance_results = LLM_evaluations_cache[LLM_evaluations_reverse_mapping[reverse_mapping_key][0]]
+
+
+                    LLM_evaluations_reverse_mapping[reverse_mapping_key].append(document_key)
+
             else:
 
                 # The query/passage tuple has already been evaluated
@@ -183,10 +226,11 @@ class LLMAccess():
 
                     relevance_results = LLM_evaluations_cache[document_key].copy()
 
-                    # Indicate the previous cost has now been saved
+                    if relevance_results['cost'] > 0:
+                        # Indicate the previous cost has now been saved
 
-                    relevance_results['saved_cost'] = relevance_results['cost']
-                    relevance_results['cost'] = 0.0
+                        relevance_results['saved_cost'] = relevance_results['cost']
+                        relevance_results['cost'] = 0.0
                 else:
                     relevance_results = LLM_evaluations_cache[document_key]
                     
@@ -205,7 +249,8 @@ class LLMAccess():
             if output_history_file is not None:
                 with open(args.history, "wb") as output_history_file_handler:
                     pickle.dump({'args': args, 
-                                 'evaluation_cache': LLM_evaluations_cache}, output_history_file_handler, pickle.HIGHEST_PROTOCOL)
+                                 'evaluation_cache': LLM_evaluations_cache,
+                                 'reverse_mapping': LLM_evaluations_reverse_mapping}, output_history_file_handler, pickle.HIGHEST_PROTOCOL)
 
         return validation_results_df
 
@@ -223,6 +268,7 @@ class GPT4Access(LLMAccess):
                  examples, 
                  example_format,
                  evaluations_cache=None,
+                 reverse_mapping=None,
                  verbose=True):
         
         super().__init__(openai, 
@@ -234,6 +280,7 @@ class GPT4Access(LLMAccess):
                          examples, 
                          example_format=example_format,
                          evaluations_cache=evaluations_cache,
+                         reverse_mapping=reverse_mapping,
                          verbose=verbose)
 
         self.model_name = model_name
@@ -382,13 +429,17 @@ if __name__ == '__main__':
 
     # Try loading the history, if it already exist
 
+    evaluation_cache = None
+    reverse_mapping = None
+
     if (args.history is not None) and (os.path.exists(args.history)):
         with open(args.history, "rb") as input_file:
             history_data = pickle.load(input_file)
 
         evaluation_cache = history_data['evaluation_cache']
-    else:
-        evaluation_cache = None
+
+        if 'reverse_mapping' in history_data:
+            reverse_mapping = history_data['reverse_mapping']
 
 
     # Load the initial prompt and examples from the provided JSON files, if any.
@@ -456,6 +507,7 @@ if __name__ == '__main__':
                                   examples=args.examples,
                                   example_format=args.example_format,
                                   evaluations_cache=evaluation_cache,
+                                  reverse_mapping=reverse_mapping,
                                   verbose=args.verbose)
         
         LLMInterface.initialize_LLM(api_key=json.load(open(args.api_keys))[args.api_key_to_use])

@@ -158,6 +158,11 @@ class LLMAccess():
                                                                             number_of_completions=number_of_completions,
                                                                             verbose=verbose)
                     except Exception as e:
+
+                        #
+                        # To Do: Enhance this handle to better tackle communication problems or quota exhaustion.
+                        #
+
                         print(e)
 
                         if number_of_completions > 1:
